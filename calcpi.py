@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
-import random, sys
+import math, random, sys
+#from accept-reject import get_rnd
 
 def find_pi(n):
     arr = np.empty(n)
@@ -23,3 +24,4 @@ for i in range(1, 12):
 for i in range(2, 6):
     pts = 10 ** i
     print("10 calculations with", pts, "points: sigma =", several_pi(10, pts))
+
