@@ -39,13 +39,13 @@ x_accepted = 0
 x_generated = 0
 for i in range(0, NUM):
     x, y, pr = try_ar(0, 5)
+    x_generated += 1
     while y > pr:
         x_generated += 1
         x, y, pr = try_ar(0, 5)
-    x_generated += 1
     x_accepted += 1
     X[i] = x
 
 print("Generated; acceptance rate: " + str(x_accepted / x_generated))
-plt.hist(X)
-plt.show()
+#plt.hist(X)
+#plt.show()
