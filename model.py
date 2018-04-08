@@ -1,22 +1,64 @@
 import random, math
 import numpy as np
+import matplotlib.pyplot as plt
+import time
+from mpl_toolkits.mplot3d import Axes3D
 
 E_CRIT = 3
 T_MIN = 2
 T_MAX = 6
+X_INI = 0
+Y_INI = 0
+Z_INI = 0
+M = 0.03
+
+def draw(fig, ax, partons, deadPartons, hadrons):
+    ax.clear()
+    ax.scatter(0, 0, 0)
+    for parton in partons:
+        xs, ys, zs = getLine(parton)
+        ax.plot(xs, ys, zs)
+
+    for parton in deadPartons:
+        xs, ys, zs = getLine(parton)
+        ax.plot(xs, ys, zs)
+    for hadron in hadrons:
+        xs, ys, zs = getLine(hadron)
+        ax.plot(xs, ys, zs)
+        ax.scatter(hadron.pos[0][0], hadron.pos[1][0], hadron.pos[2][0])
+    fig.canvas.draw()
+
+def getLine(parton):
+    xs = [parton.birth[0][0], parton.pos[0][0]]
+    ys = [parton.birth[1][0], parton.pos[1][0]]
+    zs = [parton.birth[2][0], parton.pos[2][0]]
+    return xs, ys, zs
 
 def model(px, py, pz):
+    #GRAPHICS
+    fig = plt.figure()
+    ax = fig.gca(projection='3d')
+    plt.ion()
+    fig.show()
+    ##
+
     partons = []
     P = np.array([px, py, pz])
     P.shape = (3, 1)
-    original = Parton(0, 0, 0, P, random_t())
+    original = Parton(X_INI, Y_INI, Z_INI, P, random_t())
     partons.append(original)
     hadrons = []
+    deadPartons = []
     
+    timeout = 0
     ticks = 0
-    while len(partons) > 0:
+    while timeout > 0 or  len(partons) > 0:
         ticks += 1
+        timeout -= 1
         
+        for hadron in hadrons:
+            hadron.pos += hadron.P
+
         i = 0
         while i < len(partons):
             parton = partons[i]
@@ -25,6 +67,7 @@ def model(px, py, pz):
             if parton.t <= 0:
                 #splitting
                 del partons[i]
+                deadPartons.append(parton)
                 i = i - 1
                 A, B = split(parton)
                 A = Parton(parton.pos[0], parton.pos[1], parton.pos[2], A, random_t())
@@ -39,13 +82,19 @@ def model(px, py, pz):
                     i = i + 1
                 else:
                     hadrons.append(B)
-
+                if len(partons) == 0:
+                    timeout = 10
 
             i = i + 1
+        time.sleep(0.05)
+        draw(fig, ax, partons, deadPartons, hadrons)
         if ticks % 10 == 0:
             print("t =", ticks)
             print("# of partons:", len(partons)) 
+    plt.ioff()
     print("# of hadrons:", len(hadrons))
+    draw(fig, ax, partons, deadPartons, hadrons)
+    input("Done simulating, any key to close...")
 
 def split(parton):
     """Calculate a random splitting of a parton with energy E and 3D momentum P.
@@ -77,7 +126,6 @@ def random_pair():
 
 def randomInverse(endValue):
     #PDF = 1/(1+x) CDF = ln(x+1) CDF_INV = e^x - 1
-    M = 0.001
     ylow = 0
     yhigh = math.log((endValue + M) / M)
     rnd = random.random() * (yhigh - ylow) + ylow
@@ -122,7 +170,7 @@ class Parton:
         self.pos.shape = (3, 1)
         self.P = P
         self.t = t
-
-
+        self.birth = np.array([x, y, z], dtype = float)
+        self.birth.shape = (3, 1)
 
 model(5, 12, 4)
