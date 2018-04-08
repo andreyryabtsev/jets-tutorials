@@ -10,7 +10,7 @@ T_MAX = 6
 X_INI = 0
 Y_INI = 0
 Z_INI = 0
-M = 0.03
+M = 0.006
 
 def draw(fig, ax, partons, deadPartons, hadrons):
     ax.clear()
@@ -88,9 +88,6 @@ def model(px, py, pz):
             i = i + 1
         time.sleep(0.05)
         draw(fig, ax, partons, deadPartons, hadrons)
-        if ticks % 10 == 0:
-            print("t =", ticks)
-            print("# of partons:", len(partons)) 
     plt.ioff()
     print("# of hadrons:", len(hadrons))
     draw(fig, ax, partons, deadPartons, hadrons)
@@ -106,9 +103,9 @@ def split(parton):
     azimuthal = random.random() * math.pi
 
     thetaAxis = standardOrthogonal(P)
-    thetaA = rotationMatrix2(thetaAxis, theta)
-    thetaB = rotationMatrix2(thetaAxis, -theta)
-    phiRotation = rotationMatrix2(P, azimuthal)
+    thetaA = rotationMatrix(thetaAxis, theta)
+    thetaB = rotationMatrix(thetaAxis, -theta)
+    phiRotation = rotationMatrix(P, azimuthal)
     matrixA = np.matmul(phiRotation, thetaA)
     matrixB = np.matmul(phiRotation, thetaB)
     
@@ -132,11 +129,6 @@ def randomInverse(endValue):
     return M * (math.exp(rnd) - 1)
 
 def rotationMatrix(axis, angle):
-    assert axis.shape == (3,1)
-    axis = axis / np.linalg.norm(axis)
-    return np.cos(angle) * np.identity(3) + np.sin(angle) * skewSymMatrix(axis) + (1 - np.cos(angle)) * np.tensordot(axis, axis)
-
-def rotationMatrix2(axis, angle):
     assert axis.shape == (3, 1)
     axis = axis / np.linalg.norm(axis)
     x = axis[0]
@@ -152,10 +144,6 @@ def rotationMatrix2(axis, angle):
 
 def energy(parton):
     return np.linalg.norm(parton.P)
-
-def skewSymMatrix(vector):
-    assert vector.shape == (3,1)
-    return np.array([[0, -vector[2], vector[1]], [vector[2], 0, -vector[0]], [-vector[1], vector[0], 0]])
 
 def standardOrthogonal(vector):
     assert vector.shape == (3, 1)
