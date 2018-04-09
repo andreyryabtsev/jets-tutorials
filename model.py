@@ -10,7 +10,8 @@ T_MAX = 6
 X_INI = 0
 Y_INI = 0
 Z_INI = 0
-M = 0.006
+M = 0.06
+dt = 0.01
 
 def draw(fig, ax, partons, deadPartons, hadrons):
     ax.clear()
@@ -86,7 +87,7 @@ def model(px, py, pz):
                     timeout = 10
 
             i = i + 1
-        time.sleep(0.05)
+        time.sleep(dt)
         draw(fig, ax, partons, deadPartons, hadrons)
     plt.ioff()
     print("# of hadrons:", len(hadrons))
