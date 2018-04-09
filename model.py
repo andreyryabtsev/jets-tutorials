@@ -104,13 +104,13 @@ def split(parton):
 
     thetaAxis = standardOrthogonal(P)
     thetaA = rotationMatrix(thetaAxis, theta)
-    thetaB = rotationMatrix(thetaAxis, -theta)
+    #thetaB = rotationMatrix(thetaAxis, -theta)
     phiRotation = rotationMatrix(P, azimuthal)
     matrixA = np.matmul(phiRotation, thetaA)
-    matrixB = np.matmul(phiRotation, thetaB)
+    #matrixB = np.matmul(phiRotation, thetaB)
     
     A = z * np.matmul(matrixA, P)
-    B = (1 - z) * np.matmul(matrixB, P)
+    B = P - A
     
     return A, B
 
