@@ -1,42 +1,21 @@
 import numpy as np
 import math
-import sys
 import copy
 from sim import model
 from matplotlib import pyplot as plt
 
-#n = 1
-#R = 0.05
-Y = 500
+n = 1
+R = 0.05
+Y = 1000
 
 def simulate_recombine():
-    Ns = [-1, 0, 1]
-    Rs = [0.01, 0.05, 0.1, 0.5, 1]
-    showers = []
-    for i in range(0, Y):
-        showers.append(model())
-    print("Done generating, recombining...")
-    for a in range(3):
-        n = Ns[a]
-        for b in range(5):
-            R = Rs[b]
-            jets = np.zeros(Y)
-            for i in range(Y):
-                if 1: #i > 0 and i % (Y / 4) == 0:
-                    sys.stdout.write("\rRecombining, " + str(i * 1000 // Y / 10) + "% done...")
-                    sys.stdout.flush()
-                momentums = copy.deepcopy(showers[i])
-                hh = recombine(momentums, n, R)
-                jets[i] = len(hh)
-            print("Recombined with preset " + str(1 + 5*a + b) + "/15.")
-            plt.subplot(3, 5, 1 + 5 * a + b)
-            plt.hist(jets)
-            plt.title('n = ' + str(n) + ', R = ' + str(R))
-    plt.tight_layout()
-    plt.show()
+    shower = model()
+    hh = recombine(shower)
+    jets, beam = len(hh)
+    
 
 
-def recombine(momentums, n, R):
+def recombine(momentums):
     jets = []
     beam = np.zeros((3, 1)) 
     beam.shape = (3, 1)
@@ -48,7 +27,7 @@ def recombine(momentums, n, R):
         the_j = 0
         for i in range(0, len(momentums)):
             for j in range(i + 1, len(momentums)):
-                dij = eq4(momentums[i], momentums[j], beam, n, R)
+                dij = eq4(momentums[i], momentums[j], beam)
                 if dij < best_ij:
                     best_ij = dij
                     the_i = i
@@ -56,7 +35,7 @@ def recombine(momentums, n, R):
         best_iB = 1000000000000
         beam_i = 0
         for i in range(0, len(momentums)):
-            diB = eq5(momentums[i], beam, n)
+            diB = eq5(momentums[i], beam)
             if diB < best_iB:
                 best_iB = diB
                 beam_i = i
@@ -71,15 +50,15 @@ def recombine(momentums, n, R):
             momentums.append(first + second)
         else:
             jets.append(momentums.pop(beam_i))
-    return jets
+    return jets, beam
 
 
 
 
-def eq5(i, beam, n):
+def eq5(i, beam):
     return transverse_momentum(i, beam) ** (2 * n)
 
-def eq4(i, j, beam, n, R):
+def eq4(i, j, beam):
     pi = transverse_momentum(i, beam) ** (2 * n)
     pj = transverse_momentum(j, beam) ** (2 * n)
     return min(pi, pj) * angular_distance(i, j, beam) / R
