@@ -7,11 +7,11 @@ from matplotlib import pyplot as plt
 
 #n = 1
 #R = 0.05
-Y = 500
+Y = 100
 
 def simulate_recombine():
     Ns = [-1, 0, 1]
-    Rs = [0.01, 0.05, 0.1, 0.5, 1]
+    Rs = 100 * [0.01, 0.05, 0.1, 0.5, 1]
     showers = []
     for i in range(0, Y):
         showers.append(model())
@@ -30,7 +30,7 @@ def simulate_recombine():
                 jets[i] = len(hh)
             print("Recombined with preset " + str(1 + 5*a + b) + "/15.")
             plt.subplot(3, 5, 1 + 5 * a + b)
-            plt.hist(jets)
+            plt.hist(jets, bins = 22, range = (0, 45))
             plt.title('n = ' + str(n) + ', R = ' + str(R))
     plt.tight_layout()
     plt.show()

@@ -5,14 +5,45 @@ from sim import model
 from matplotlib import pyplot as plt
 
 n = 1
-R = 0.05
+R = 1.4
 Y = 1000
+
+def manyObservables(n):
+    results = []
+    for i in range(0, n):
+        o = observable()
+        if o is not None:
+            results.append(o)
+    plt.hist(results)
+    plt.show()
 
 def observable():
     shower = makeJets(model())
-    hh = recombine(shower)
-    jets, beam = len(hh)
-    
+    jets, beam = recombine(shower)
+    energeticJet = jets[0]
+    for i in range(1, len(jets)):
+        if energy(jets[i].p) > energy(energeticJet.p):
+            energeticJet = jets[i]
+    js = energeticJet.subjets
+    if(len(js) < 2):
+        print ("not enough jet components")
+        return None
+    j1 = js[0]
+    j2 = js[1]
+    if transverse_momentum(j1.p, beam) < transverse_momentum(j2.p, beam):
+        tmp = j1
+        j1 = j2
+        j2 = j1 #j1 is biggest, j2 second biggest
+    for i in range(2, len(js)):
+        ji = js[i]
+        if transverse_momentum(ji.p, beam) > transverse_momentum(j1.p, beam):
+            j2 = j1
+            j1 = ji
+        elif transverse_momentum(ji.p, beam) > transverse_momentum(j2.p, beam):
+            j2 = ji
+    #now have correct j1, j2
+    sm = angular_distance(j1.p, j2.p, beam) * energy(j1.p) * energy(j2.p)
+    return sm
 
 
 def recombine(momentums):
@@ -47,8 +78,10 @@ def recombine(momentums):
                 the_j = t #i is now greater than j and can be popped first
             first = momentums.pop(the_i)
             second = momentums.pop(the_j)
-            momentums.append(first + second)
+            momentums.append(Jet.add(first, second))
+            #print("W")
         else:
+            #print("L")
             jets.append(momentums.pop(beam_i))
     return jets, beam
 
@@ -56,11 +89,11 @@ def recombine(momentums):
 def makeJets(momentums):
     jets = []
     for m in momentums:
-        jets.append(Jet(m))
+        jets.append(Jet.fromP(m))
     return jets
 
 def energy(v):
-    return v[0] + v[1] + v[2]
+    return math.sqrt(v[0] ** 2 + v[1] ** 2 + v[2] ** 2)
 
 def eq5(i, beam):
     return transverse_momentum(i, beam) ** (2 * n)
@@ -95,23 +128,24 @@ def prapidity(theta):
     return -math.log(math.tan(theta / 2))
 
 class Jet:
-    def __init__(self, momentum):
-        self.p = momentum
-        self.subjets = []
-    def __init__(self, one, other):
+    @classmethod
+    def fromP(cls, momentum):
+        obj = cls()
+        obj.p = momentum
+        obj.subjets = [obj]
+        return obj
+    @classmethod
+    def fromTwo(cls, one, other):
+        self = cls()
         self.p = one.p + other.p
         self.subjets = []
-        if len(one.subjets) == 0:
-            self.subjets.append(one.p)
-        else:
-            self.subjets += one.subjets
-        if len(other.subjets) == 0:
-            self.subjets.append(other.p)
-        else:
-            self.subjets += other.subjets
+        self.subjets += one.subjets
+        self.subjets += other.subjets
+        return self
 
-    def __add__(self, other):
-        return Jet(self, other)
+    def add(self, other):
+        return Jet.fromTwo(self, other)
 
 if __name__ == "__main__":
-    simulate_recombine()
+    #observable()
+    manyObservables(1000)
