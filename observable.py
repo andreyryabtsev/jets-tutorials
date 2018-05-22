@@ -8,8 +8,8 @@ n = 1
 R = 0.05
 Y = 1000
 
-def simulate_recombine():
-    shower = model()
+def observable():
+    shower = makeJets(model())
     hh = recombine(shower)
     jets, beam = len(hh)
     
@@ -20,14 +20,14 @@ def recombine(momentums):
     beam = np.zeros((3, 1)) 
     beam.shape = (3, 1)
     for a in momentums:
-        beam += a
+        beam += a.p
     while len(momentums) > 0:
         best_ij = 1000000000000
         the_i = 0
         the_j = 0
         for i in range(0, len(momentums)):
             for j in range(i + 1, len(momentums)):
-                dij = eq4(momentums[i], momentums[j], beam)
+                dij = eq4(momentums[i].p, momentums[j].p, beam)
                 if dij < best_ij:
                     best_ij = dij
                     the_i = i
@@ -35,7 +35,7 @@ def recombine(momentums):
         best_iB = 1000000000000
         beam_i = 0
         for i in range(0, len(momentums)):
-            diB = eq5(momentums[i], beam)
+            diB = eq5(momentums[i].p, beam)
             if diB < best_iB:
                 best_iB = diB
                 beam_i = i
@@ -53,7 +53,14 @@ def recombine(momentums):
     return jets, beam
 
 
+def makeJets(momentums):
+    jets = []
+    for m in momentums:
+        jets.append(Jet(m))
+    return jets
 
+def energy(v):
+    return v[0] + v[1] + v[2]
 
 def eq5(i, beam):
     return transverse_momentum(i, beam) ** (2 * n)
@@ -87,6 +94,24 @@ def prapidity(theta):
     """Calculates pseudorapidity for a given theta"""
     return -math.log(math.tan(theta / 2))
 
+class Jet:
+    def __init__(self, momentum):
+        self.p = momentum
+        self.subjets = []
+    def __init__(self, one, other):
+        self.p = one.p + other.p
+        self.subjets = []
+        if len(one.subjets) == 0:
+            self.subjets.append(one.p)
+        else:
+            self.subjets += one.subjets
+        if len(other.subjets) == 0:
+            self.subjets.append(other.p)
+        else:
+            self.subjets += other.subjets
+
+    def __add__(self, other):
+        return Jet(self, other)
 
 if __name__ == "__main__":
     simulate_recombine()
